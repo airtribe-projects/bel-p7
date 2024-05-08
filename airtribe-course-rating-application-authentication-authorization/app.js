@@ -7,6 +7,8 @@ const mongoose = require('mongoose');
 const User = require('./models/user');
 const bcrypt = require('bcrypt');
 const jwt = require("jsonwebtoken");
+const verifyToken = require('./middleware/authJWT');
+const user = require('./models/user');
 const PORT = 8000;
 require('dotenv').config();
 app.use(express.json());
@@ -70,18 +72,28 @@ app.get('/courses', (req, res) => {
     return res.status(200).json(courseData);
 })
 
-app.get('/courses/:courseId', (req, res) => {
-    try {
-        let airtribeCourses = courseData.airtribe;
-        let courseIdPassed = req.params.courseId;
-        let filteredCourse = airtribeCourses.filter(val => val.courseId == courseIdPassed);
-        if(filteredCourse.length == 0) {
-            return res.status(404).json("No appropriate course found with the provided course id");
+app.get('/courses/:courseId', verifyToken, (req, res) => {
+    if (req.user) {
+        if (req.user.role == "admin") {
+            try {
+                let airtribeCourses = courseData.airtribe;
+                let courseIdPassed = req.params.courseId;
+                let filteredCourse = airtribeCourses.filter(val => val.courseId == courseIdPassed);
+                if(filteredCourse.length == 0) {
+                    return res.status(404).json("No appropriate course found with the provided course id");
+                }
+                return res.status(200).json(filteredCourse);
+            } catch (error) {
+                console.log(error);
+                return res.status(500).json("Something went wrong while processing the request");
+            }
+        } else {
+            
         }
-        return res.status(200).json(filteredCourse);
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json("Something went wrong while processing the request");
+    } else {
+        return res.status(403).json({
+            message: req.message
+        });
     }
 });
 
