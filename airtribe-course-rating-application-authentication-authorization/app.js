@@ -74,21 +74,17 @@ app.get('/courses', (req, res) => {
 
 app.get('/courses/:courseId', verifyToken, (req, res) => {
     if (req.user) {
-        if (req.user.role == "admin") {
-            try {
-                let airtribeCourses = courseData.airtribe;
-                let courseIdPassed = req.params.courseId;
-                let filteredCourse = airtribeCourses.filter(val => val.courseId == courseIdPassed);
-                if(filteredCourse.length == 0) {
-                    return res.status(404).json("No appropriate course found with the provided course id");
-                }
-                return res.status(200).json(filteredCourse);
-            } catch (error) {
-                console.log(error);
-                return res.status(500).json("Something went wrong while processing the request");
+        try {
+            let airtribeCourses = courseData.airtribe;
+            let courseIdPassed = req.params.courseId;
+            let filteredCourse = airtribeCourses.filter(val => val.courseId == courseIdPassed);
+            if(filteredCourse.length == 0) {
+                return res.status(404).json("No appropriate course found with the provided course id");
             }
-        } else {
-            
+            return res.status(200).json(filteredCourse);
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json("Something went wrong while processing the request");
         }
     } else {
         return res.status(403).json({
@@ -116,10 +112,12 @@ app.post('/courses/:courseId', (req, res) => {
     }
 });
 
-try {
-    mongoose.connect("mongodb://localhost:27017/usersdb");
-} catch (err) {
-    console.log("Failed while connecting to mongodb");
+if (process.env.NODE_ENV != 'test') {
+    try {
+        mongoose.connect("mongodb://localhost:27017/usersdb");
+    } catch (err) {
+        console.log("Failed while connecting to mongodb");
+    }
 }
 
 app.listen(PORT, (err) => {
@@ -128,5 +126,8 @@ app.listen(PORT, (err) => {
     } else {
         console.log("Server started successfully");
     }
-})
+});
+
+
+module.exports = app;
 
